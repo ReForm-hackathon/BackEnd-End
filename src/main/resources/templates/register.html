@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+        h1 { font-size: 20px; }
+        form { display: grid; gap: 8px; }
+        input, button { padding: 10px 12px; font-size: 14px; }
+        .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+    </style>
+    <script>
+        async function sendCode() {
+            const phone = document.querySelector('input[name=phoneNumber]').value;
+            if (!phone) { alert('전화번호를 입력하세요'); return; }
+            const params = new URLSearchParams({ phoneNumber: phone });
+            const res = await fetch('/message', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+            const text = await res.text();
+            alert(text);
+        }
+        async function submitRegister(ev) {
+            ev.preventDefault();
+            const payload = Object.fromEntries(new FormData(ev.target).entries());
+            const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.ok) {
+                alert('회원가입 완료! 로그인 화면으로 이동합니다.');
+                window.location.href = '/login';
+            } else {
+                alert(await res.text());
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>회원가입</h1>
+<form onsubmit="submitRegister(event)">
+    <input name="userId" placeholder="아이디" required />
+    <input name="password" placeholder="비밀번호" type="password" required />
+    <input name="email" placeholder="이메일" type="email" required />
+    <input name="userName" placeholder="이름" required />
+    <div class="row">
+        <input name="phoneNumber" placeholder="전화번호(숫자만)" required />
+        <button type="button" onclick="sendCode()">인증번호 받기</button>
+    </div>
+    <input name="verificationCode" placeholder="인증번호" required />
+    <button type="submit">가입하기</button>
+    <a href="/login">로그인으로 이동</a>
+    </form>
+</body>
+</html>
+
