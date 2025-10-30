@@ -11,12 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -320,6 +320,10 @@ public class CommunityController {
                     item.put("communityId", c.getCommunityId());
                     item.put("title", c.getTitle());
                     item.put("author", c.getUser() != null ? c.getUser().getUserName() : "");
+                    long likeCount = communityLikeRepository.countByCommunity_CommunityId(c.getCommunityId());
+                    long commentCount = communityCommentRepository.countByCommunity_CommunityId(c.getCommunityId());
+                    item.put("likeCount", likeCount);
+                    item.put("commentCount", commentCount);
                     return item;
                 })
                 .toList();
@@ -330,6 +334,92 @@ public class CommunityController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[/community] 목록 조회 실패", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "서버 에러가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 커뮤니티 제목 검색 (부분일치)
+     * - 경로: GET /board/search/{string}
+     * - 헤더: Authorization: Bearer {access_token}
+     */
+    @GetMapping("/board/search/{string}")
+    public ResponseEntity<Map<String, Object>> searchCommunityByTitle(@PathVariable("string") String keyword) {
+        try {
+            // 인증 확인
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "인증이 필요합니다."));
+            }
+
+            String query = keyword == null ? "" : keyword;
+            List<Community> communities = communityRepository.findByTitleContainingOrderByCreatedAtDesc(query);
+
+            List<Map<String, Object>> items = communities.stream()
+                .map(c -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("communityId", c.getCommunityId());
+                    item.put("title", c.getTitle());
+                    item.put("author", c.getUser() != null ? c.getUser().getUserName() : "");
+                    item.put("createdAt", c.getCreatedAt());
+                    return item;
+                })
+                .toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("items", items);
+            response.put("totalCount", items.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[/board/search/{}] 검색 실패", keyword, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "서버 에러가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 좋아요 상위 5개 커뮤니티 게시글
+     * - 경로: GET /community/top-liked
+     * - 응답: 이미지(있으면), 제목, 댓글 수, 좋아요 수
+     */
+    @GetMapping("/community/top-liked")
+    public ResponseEntity<Map<String, Object>> getTopLikedCommunities() {
+        try {
+            // 인증 확인
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "인증이 필요합니다."));
+            }
+
+            var rows = communityLikeRepository.findTopLikedCommunities(PageRequest.of(0, 5));
+            java.util.List<Map<String, Object>> items = new java.util.ArrayList<>();
+
+            for (Object[] row : rows) {
+                Integer cid = (Integer) row[0];
+                Long likeCount = (Long) row[1];
+                var communityOpt = communityRepository.findById(cid);
+                if (communityOpt.isEmpty()) continue;
+                var c = communityOpt.get();
+                long commentCount = communityCommentRepository.countByCommunity_CommunityId(cid);
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("communityId", cid);
+                item.put("title", c.getTitle());
+                item.put("image", c.getImage()); // null 가능: 이미지 없으면 null
+                item.put("likeCount", likeCount);
+                item.put("commentCount", commentCount);
+                items.add(item);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("items", items);
+            response.put("totalCount", items.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[/community/top-liked] 조회 실패", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
@@ -361,6 +451,11 @@ public class CommunityController {
             body.put("image", community.getImage());
             body.put("content", community.getContent());
             body.put("tagContent", community.getTagContent());
+            // counts
+            long likeCount = communityLikeRepository.countByCommunity_CommunityId(communityId);
+            long commentCount = communityCommentRepository.countByCommunity_CommunityId(communityId);
+            body.put("likeCount", likeCount);
+            body.put("commentCount", commentCount);
 
             return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {

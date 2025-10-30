@@ -32,4 +32,9 @@ public interface MarketRepository extends JpaRepository<Market, Integer> {
      * 전체 목록 최신순 조회
      */
     List<Market> findAllByOrderByCreatedAtDesc();
+
+    /**
+     * 제목 부분일치 검색 (최신순)
+     */
+    List<Market> findByTitleContainingOrderByCreatedAtDesc(String title);
 }

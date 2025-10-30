@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -55,6 +54,7 @@ public class MarketController {
                 .user(user)
                 .title(request.getTitle())
                 .content(request.getContent())
+                .tag(request.getTag())
                 .image(request.getImage())
                 .price(request.getPrice())
                 .isDonation(request.getIsDonation())
@@ -69,6 +69,7 @@ public class MarketController {
             response.put("message", "제품이 성공적으로 등록되었습니다.");
             response.put("marketId", savedMarket.getMarketId());
             response.put("title", savedMarket.getTitle());
+            response.put("tag", savedMarket.getTag());
             response.put("price", savedMarket.getPrice());
             response.put("isDonation", savedMarket.getIsDonation());
             response.put("createdAt", savedMarket.getCreatedAt());
@@ -362,6 +363,7 @@ public class MarketController {
             body.put("author", market.getUser() != null ? market.getUser().getUserName() : null);
             body.put("createdAt", market.getCreatedAt());
             body.put("price", market.getPrice());
+            body.put("tag", market.getTag());
             body.put("image", market.getImage());
             body.put("content", market.getContent());
             body.put("isDonation", market.getIsDonation());
@@ -416,6 +418,46 @@ public class MarketController {
     }
 
     /**
+     * 마켓 제목 검색 (부분일치)
+     * - 경로: GET /market/search/{string}
+     * - 헤더: Authorization: Bearer {access_token}
+     */
+    @GetMapping("/search/{string}")
+    public ResponseEntity<Map<String, Object>> searchMarketByTitle(@PathVariable("string") String keyword) {
+        try {
+            // 인증 확인
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "인증이 필요합니다."));
+            }
+
+            String query = keyword == null ? "" : keyword;
+            List<Market> markets = marketRepository.findByTitleContainingOrderByCreatedAtDesc(query);
+
+            List<Map<String, Object>> items = markets.stream()
+                .map(m -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("marketId", m.getMarketId());
+                    item.put("title", m.getTitle());
+                    item.put("author", m.getUser() != null ? m.getUser().getUserName() : "");
+                    item.put("createdAt", m.getCreatedAt());
+                    return item;
+                })
+                .toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("items", items);
+            response.put("totalCount", items.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[/market/search/{}] 검색 실패", keyword, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "서버 에러가 발생했습니다."));
+        }
+    }
+
+    /**
      * 마켓 제품 수정
      * - 경로: PUT /market/item/{market_id}
      * - 헤더: Authorization: Bearer {access_token}
@@ -450,6 +492,7 @@ public class MarketController {
                 .user(existingMarket.getUser())
                 .title(request.getTitle())
                 .content(request.getContent())
+                .tag(request.getTag())
                 .image(request.getImage())
                 .price(request.getPrice())
                 .isDonation(request.getIsDonation())
@@ -465,6 +508,7 @@ public class MarketController {
             response.put("marketId", savedMarket.getMarketId());
             response.put("title", savedMarket.getTitle());
             response.put("content", savedMarket.getContent());
+            response.put("tag", savedMarket.getTag());
             response.put("image", savedMarket.getImage());
             response.put("price", savedMarket.getPrice());
             response.put("isDonation", savedMarket.getIsDonation());
@@ -562,6 +606,7 @@ public class MarketController {
     public static class MarketItemRequestDTO {
         private String title;
         private String content;
+            private String tag;
         private String image;
         private Integer price;
         private Boolean isDonation;
@@ -572,6 +617,8 @@ public class MarketController {
         
         public String getContent() { return content; }
         public void setContent(String content) { this.content = content; }
+            public String getTag() { return tag; }
+            public void setTag(String tag) { this.tag = tag; }
         
         public String getImage() { return image; }
         public void setImage(String image) { this.image = image; }
