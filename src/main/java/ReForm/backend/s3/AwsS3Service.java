@@ -35,12 +35,15 @@ public class AwsS3Service {
 	@Value("${storage.subdirs.market:market}")
 	private String marketPrefix;
 
+    @Value("${storage.subdirs.profile:profile}")
+    private String profilePrefix;
+
 	private final S3Client s3Client;
 
 	/**
 	 * 업로드 카테고리 (S3 버킷 내 폴더 구분용)
 	 */
-	public enum Category { AI, COMMUNITY, MARKET }
+    public enum Category { AI, COMMUNITY, MARKET, PROFILE }
 
 	/**
 	 * 단일 파일 업로드
@@ -137,13 +140,16 @@ public class AwsS3Service {
 	 * 카테고리와 파일명을 결합해 S3 오브젝트 키(prefix/filename) 생성
 	 */
 	private String buildObjectKey(Category category, String fileName) {
-		String prefix;
+        String prefix;
 		switch (category) {
 			case COMMUNITY -> prefix = communityPrefix;
 			case MARKET -> prefix = marketPrefix;
 			case AI -> {
 				prefix = aiPrefix;
 			}
+            case PROFILE -> {
+                prefix = profilePrefix;
+            }
 			default -> {
 				prefix = aiPrefix;
 			}

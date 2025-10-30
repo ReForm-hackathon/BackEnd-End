@@ -352,6 +352,7 @@ public class OAuthCallbackController {
                             .role(Role.USER)
                             .createdAt(LocalDateTime.now())
                             .updatedAt(LocalDateTime.now())
+                            .profileImageUrl("/basicProfile/basicUSerImage.png")
                             .build();
                     User saved = userRepository.save(u);
                     return new UpsertResult(saved, true);

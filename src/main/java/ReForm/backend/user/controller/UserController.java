@@ -139,7 +139,7 @@ public class UserController {
         if (userIdOpt.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String userId = userIdOpt.get();
 
-        String url = awsS3Service.store(file, ReForm.backend.s3.AwsS3Service.Category.AI); // 임시로 AI prefix 사용
+        String url = awsS3Service.store(file, ReForm.backend.s3.AwsS3Service.Category.PROFILE);
         User u = userRepository.findById(userId).orElseThrow();
         User updated = User.builder()
                 .userId(u.getUserId())
