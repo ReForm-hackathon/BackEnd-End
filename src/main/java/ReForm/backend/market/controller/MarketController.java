@@ -412,6 +412,19 @@ public class MarketController {
             body.put("content", market.getContent());
             body.put("isDonation", market.getIsDonation());
 
+            // comments
+            var comments = marketCommentRepository.findByMarket_MarketIdOrderByCreatedAtDesc(marketId);
+            var commentItems = comments.stream().map(c -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("commentId", c.getCommentId());
+                item.put("author", c.getUser() != null ? c.getUser().getUserName() : null);
+                item.put("authorProfileImageUrl", c.getUser() != null ? c.getUser().getProfileImageUrl() : null);
+                item.put("content", c.getContent());
+                item.put("createdAt", c.getCreatedAt());
+                return item;
+            }).toList();
+            body.put("comments", commentItems);
+
             return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

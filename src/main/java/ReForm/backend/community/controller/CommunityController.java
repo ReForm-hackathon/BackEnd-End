@@ -457,6 +457,19 @@ public class CommunityController {
             body.put("likeCount", likeCount);
             body.put("commentCount", commentCount);
 
+            // comments
+            var comments = communityCommentRepository.findByCommunity_CommunityIdOrderByCreatedAtDesc(communityId);
+            var commentItems = comments.stream().map(c -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("commentId", c.getCommentId());
+                item.put("author", c.getUser() != null ? c.getUser().getUserName() : null);
+                item.put("authorProfileImageUrl", c.getUser() != null ? c.getUser().getProfileImageUrl() : null);
+                item.put("content", c.getContent());
+                item.put("createdAt", c.getCreatedAt());
+                return item;
+            }).toList();
+            body.put("comments", commentItems);
+
             return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
