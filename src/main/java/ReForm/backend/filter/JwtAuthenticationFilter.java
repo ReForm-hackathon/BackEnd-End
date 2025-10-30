@@ -78,7 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     userRepository.save(user); // 리프레시 토큰 값 변경 DB에 업데이트해서 저장
                     // 액세스 토큰 새로 발급받는 로직에서 유저 이메일과 소셜 타입을 기반으로 생성
                     String newAccessToken = jwtService.createAccessToken(user.getEmail(), String.valueOf(user.getSocialType()));
-                    jwtService.sendRefreshToken(response, newRefreshToken, newAccessToken); // 리프레시 토큰에 액세스와 리프레시 토큰 담아서 클라이언트한테 응답
+                    jwtService.sendRefreshToken(response, newAccessToken, newRefreshToken); // 리프레시 토큰에 액세스와 리프레시 토큰 담아서 클라이언트한테 응답
                 });
     }
 
@@ -105,7 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 2) email 클레임으로 시도 (소셜 로그인 토큰)
                     if (!authenticated) {
                         jwtService.extractEmail(accessToken)
-                                .flatMap(userRepository::findByEmail)
+                                .flatMap(userRepository::findFirstByEmailOrderByCreatedAtDesc)
                                 .ifPresent(this::saveAuthentication);
                     }
                 });

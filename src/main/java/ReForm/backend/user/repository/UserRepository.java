@@ -12,6 +12,7 @@ public interface UserRepository extends JpaRepository<User, String> { // PK: use
 
     // 로그인 후 추후 회원이 서비스를 이용할 때 이 값들을 찾아서 인증되면 서비스 사용가능하게 로직 진행
     Optional<User> findByEmail(String email); // 사용자 이메일을 조회해서 값을 찾음 (로그인 후 회원가입시)
+    Optional<User> findFirstByEmailOrderByCreatedAtDesc(String email); // 이메일 중복 시 최신 레코드 우선
     Optional<User> findByNickname(String nickname); // 사용자 닉네임을 조회해서 값을 찾음 (추가정보 입력시)
     Optional<User> findByRefreshToken(String refreshToken); // 리프레시 토큰 값을 조회해서 값을 찾음
 

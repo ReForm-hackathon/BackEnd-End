@@ -49,6 +49,7 @@ public class UserService {
                 .socialType(ReForm.backend.user.SocialType.LOCAL)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .profileImageUrl("/images/default-profile.png")
                 .build();
 
         return userRepository.save(user);
@@ -104,6 +105,7 @@ public class UserService {
                 .role(Role.USER)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .profileImageUrl("/images/default-profile.png")
                 .build();
         return userRepository.save(user);
     }

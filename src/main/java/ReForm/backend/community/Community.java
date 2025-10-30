@@ -23,7 +23,7 @@ public class Community {
 	@Column(name = "community_id")
 	private Integer communityId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
@@ -38,6 +38,9 @@ public class Community {
 
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
+
+	@Column(name = "tag_content")
+	private String tagContent;
 }
 
 

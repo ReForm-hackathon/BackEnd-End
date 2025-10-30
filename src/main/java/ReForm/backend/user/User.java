@@ -60,6 +60,10 @@ public class User {
     @Column(name = "provider")
     private SocialType socialType;
 
+    // 프로필 이미지 URL (기본값: /images/default-profile.png)
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     public void authorizeUser() { // 사용자 역할을 USER로 할당
         this.role = Role.USER;
     }
