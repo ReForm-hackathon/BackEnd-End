@@ -361,6 +361,7 @@ public class MarketController {
             body.put("marketId", market.getMarketId());
             body.put("title", market.getTitle());
             body.put("author", market.getUser() != null ? market.getUser().getUserName() : null);
+        body.put("authorProfileImageUrl", market.getUser() != null ? market.getUser().getProfileImageUrl() : null);
             body.put("createdAt", market.getCreatedAt());
             body.put("price", market.getPrice());
             body.put("tag", market.getTag());
@@ -402,6 +403,7 @@ public class MarketController {
                         item.put("marketId", m.getMarketId());
                         item.put("userId", m.getUser() != null ? m.getUser().getUserId() : null);
                         item.put("author", m.getUser() != null ? m.getUser().getUserName() : null);
+                    item.put("authorProfileImageUrl", m.getUser() != null ? m.getUser().getProfileImageUrl() : null);
                         item.put("title", m.getTitle());
                         item.put("content", m.getContent());
                         item.put("tag", m.getTag());
