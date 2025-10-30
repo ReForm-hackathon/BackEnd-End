@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Builder
+@Builder(toBuilder = true)
 
 @Table(name = "user")
 public class User {
@@ -64,6 +65,9 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "status")
+    private boolean status;
+
     public void authorizeUser() { // 사용자 역할을 USER로 할당
         this.role = Role.USER;
     }
@@ -71,5 +75,6 @@ public class User {
     public void updateRefreshToken(String newRefreshToken) { // 리프레시 토큰 업데이트
         this.refreshToken = newRefreshToken;
     }
+
 }
 

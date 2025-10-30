@@ -8,17 +8,17 @@ import ReForm.backend.user.service.ProfileCompletionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.ClassPathResource;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +30,8 @@ public class AdditionalInfoController {
     private final AwsS3Service awsS3Service;
     private final ProfileCompletionService profileCompletionService;
 
-    // 추가정보 상태 조회 (뷰 없이 JSON 반환)
     @GetMapping("/user/additional")
-    public ResponseEntity<java.util.Map<String, Object>> additionalInfoPage(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> additionalInfoPage(HttpServletRequest request) {
         java.util.Map<String, Object> body = new java.util.HashMap<>();
         Optional<String> userIdOpt = currentUserId(request);
         if (userIdOpt.isEmpty()) {
@@ -45,11 +44,11 @@ public class AdditionalInfoController {
             body.put("nickname", u.getNickname());
             body.put("address", u.getAddress());
             body.put("profileImageUrl", u.getProfileImageUrl());
+            body.put("status", u.isStatus()); // status 추가
         }
         return ResponseEntity.ok(body);
     }
 
-    // 추가정보 저장 (프로필 이미지 + 닉네임 + 주소)
     @PostMapping("/user/additional")
     public ResponseEntity<java.util.Map<String, Object>> submitAdditional(
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -68,11 +67,9 @@ public class AdditionalInfoController {
 
         String url = u.getProfileImageUrl();
         if (file != null && !file.isEmpty()) {
-            // 사용자가 업로드한 이미지를 S3 profile 경로에 저장
             url = awsS3Service.store(file, ReForm.backend.s3.AwsS3Service.Category.PROFILE);
             log.info("[ADDITIONAL] 사용자 업로드 이미지 S3 저장 완료 - url={}", url);
         } else {
-            // 기본 프로필 이미지를 리소스에서 읽어 S3 profile 경로에 저장
             try {
                 ClassPathResource resource = new ClassPathResource("basicProfile/basicUserImage.png");
                 byte[] bytes = resource.getContentAsByteArray();
@@ -83,6 +80,15 @@ public class AdditionalInfoController {
                 url = "/basicProfile/basicUserImage.png";
             }
         }
+
+        // 프로필 완성도 검사 결과확인
+        ProfileCompletionService.Result result = profileCompletionService.check(u.toBuilder()
+                .nickname(nickname)
+                .address(address)
+                .profileImageUrl(url)
+                .build());
+
+        boolean status = result.isComplete(); // true면 모든 정보가 완비된 것
 
         User updated = User.builder()
                 .userId(u.getUserId())
@@ -99,14 +105,14 @@ public class AdditionalInfoController {
                 .createdAt(u.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .profileImageUrl(url)
+                .status(status)      // 추가: status명 boolean형 필드 세팅
                 .build();
         updated = userRepository.save(updated);
 
-        log.info("[ADDITIONAL] DB 저장 완료 - userId={}, nickname='{}', address='{}', profileImageUrl={}",
-                updated.getUserId(), updated.getNickname(), updated.getAddress(), updated.getProfileImageUrl());
+        log.info("[ADDITIONAL] DB 저장 완료 - userId={}, nickname='{}', address='{}', profileImageUrl={}, status={}",
+                updated.getUserId(), updated.getNickname(), updated.getAddress(), updated.getProfileImageUrl(), updated.isStatus());
 
-        ProfileCompletionService.Result result = profileCompletionService.check(updated);
-        if (!result.isComplete()) {
+        if (!status) {
             String missing = String.join(", ", result.getMissingFields());
             log.info("[LOGIN-GATE] 누락된 값: {}", missing);
             java.util.Map<String, Object> err = new java.util.HashMap<>();
@@ -114,6 +120,7 @@ public class AdditionalInfoController {
             err.put("nickname", updated.getNickname());
             err.put("address", updated.getAddress());
             err.put("profileImageUrl", updated.getProfileImageUrl());
+            err.put("status", false);
             return ResponseEntity.badRequest().body(err);
         }
 
@@ -123,23 +130,22 @@ public class AdditionalInfoController {
         ok.put("nickname", updated.getNickname());
         ok.put("address", updated.getAddress());
         ok.put("profileImageUrl", updated.getProfileImageUrl());
+        ok.put("status", true);
         return ResponseEntity.ok(ok);
     }
 
+    // currentUserId 메서드는 그대로 사용
     private Optional<String> currentUserId(HttpServletRequest request) {
         try {
-            // 1) 세션 기반(SecurityContext) 우선: OAuth2 로그인 직후 폼 제출 시 헤더에 토큰이 없으므로 세션 사용자 사용
             org.springframework.security.core.Authentication auth =
                     org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated()) {
-                String name = auth.getName(); // 보통 email
+                String name = auth.getName();
                 if (name != null && !name.isBlank()) {
                     Optional<String> byEmail = userRepository.findByEmail(name).map(User::getUserId);
                     if (byEmail.isPresent()) return byEmail;
                 }
             }
-
-            // 2) JWT 헤더 기반 (로컬 토큰 보유 시)
             Optional<String> accessToken = jwtService.extractAccessToken(request);
             Optional<String> byUserId = accessToken.flatMap(jwtService::extractUserId);
             if (byUserId.isPresent()) return byUserId;
@@ -151,6 +157,3 @@ public class AdditionalInfoController {
         }
     }
 }
-
-
-
