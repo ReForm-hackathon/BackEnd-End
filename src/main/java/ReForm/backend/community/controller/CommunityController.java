@@ -623,6 +623,49 @@ public class CommunityController {
         }
     }
 
+    /**
+     * 커뮤니티 댓글 조회
+     * - 경로: GET /board/{board_id}/see-comment
+     * - 헤더: Authorization: Bearer {access_token}
+     */
+    @GetMapping("/board/{boardId}/see-comment")
+    public ResponseEntity<Map<String, Object>> getCommunityComments(@PathVariable Integer boardId) {
+        try {
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "인증이 필요합니다."));
+            }
+
+            // 게시글 존재 확인
+            communityRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글을 찾을 수 없습니다."));
+
+            var comments = communityCommentRepository.findByCommunity_CommunityIdOrderByCreatedAtDesc(boardId);
+            var items = comments.stream().map(c -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("commentId", c.getCommentId());
+                item.put("author", c.getUser() != null ? c.getUser().getUserName() : null);
+                item.put("authorProfileImageUrl", c.getUser() != null ? c.getUser().getProfileImageUrl() : null);
+                item.put("content", c.getContent());
+                item.put("createdAt", c.getCreatedAt());
+                return item;
+            }).toList();
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("items", items);
+            resp.put("totalCount", items.size());
+            return ResponseEntity.ok(resp);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[/board/{}/see-comment] 조회 실패", boardId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "서버 에러가 발생했습니다."));
+        }
+    }
+
     public static class CreateCommentRequest {
         private String content;
         public String getContent() { return content; }
