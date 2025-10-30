@@ -1,6 +1,7 @@
 package ReForm.backend.user.controller;
 
 import ReForm.backend.user.User;
+import ReForm.backend.user.SocialType;
 import ReForm.backend.s3.AwsS3Service;
 import ReForm.backend.user.repository.UserRepository;
 import ReForm.backend.user.service.JwtService;
@@ -34,8 +35,9 @@ public class UserController {
         }
         String userId = userIdOpt.get();
         User u = userRepository.findById(userId).orElseThrow();
+        String phoneForResponse = (u.getSocialType() == SocialType.LOCAL) ? u.getPhoneNumber() : null; // 소셜 로그인은 phone 비공개
         MypageResponse resp = new MypageResponse(
-                u.getUserId(), u.getEmail(), u.getUserName(), u.getNickname(), u.getPhoneNumber(), u.getAddress(), u.getCreatedAt()
+                u.getUserId(), u.getEmail(), u.getUserName(), u.getNickname(), phoneForResponse, u.getAddress(), u.getCreatedAt()
         );
         return ResponseEntity.ok(resp);
     }
@@ -57,6 +59,7 @@ public class UserController {
                 .socialType(u.getSocialType())
                 .socialId(u.getSocialId())
                 .role(u.getRole())
+                .refreshToken(u.getRefreshToken())
                 .nickname(req.getNickname() != null ? req.getNickname() : u.getNickname())
                 .address(req.getAddress() != null ? req.getAddress() : u.getAddress())
                 .createdAt(u.getCreatedAt())
@@ -97,6 +100,7 @@ public class UserController {
                 .socialType(u.getSocialType())
                 .socialId(u.getSocialId())
                 .role(u.getRole())
+                .refreshToken(u.getRefreshToken())
                 .nickname(req.getNickname())
                 .address(req.getAddress())
                 .createdAt(u.getCreatedAt())
@@ -149,6 +153,7 @@ public class UserController {
                 .socialType(u.getSocialType())
                 .socialId(u.getSocialId())
                 .role(u.getRole())
+                .refreshToken(u.getRefreshToken())
                 .nickname(u.getNickname())
                 .address(u.getAddress())
                 .phoneNumber(u.getPhoneNumber())

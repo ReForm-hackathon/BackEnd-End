@@ -35,15 +35,15 @@ public class AwsS3Service {
 	@Value("${storage.subdirs.market:market}")
 	private String marketPrefix;
 
-    @Value("${storage.subdirs.profile:profile}")
-    private String profilePrefix;
+	@Value("${storage.subdirs.profile:profile}")
+	private String profilePrefix;
 
 	private final S3Client s3Client;
 
 	/**
 	 * 업로드 카테고리 (S3 버킷 내 폴더 구분용)
 	 */
-    public enum Category { AI, COMMUNITY, MARKET, PROFILE }
+	public enum Category { AI, COMMUNITY, MARKET, PROFILE }
 
 	/**
 	 * 단일 파일 업로드
@@ -61,14 +61,14 @@ public class AwsS3Service {
 
 		// 업로드 시작 로그 (버킷/리전/키/파일 크기/컨텐츠타입)
 		log.info("[S3] 업로드 시작 - bucket={}, region={}, key={}, size={}, contentType={}",
-			bucketName, region, key, multipartFile.getSize(), multipartFile.getContentType());
+				bucketName, region, key, multipartFile.getSize(), multipartFile.getContentType());
 
 		PutObjectRequest request = PutObjectRequest.builder()
-			.bucket(bucketName)
-			.key(key)
-			.contentType(multipartFile.getContentType())
-			.acl(ObjectCannedACL.PUBLIC_READ) // 업로드 즉시 공개 읽기 권한 부여
-			.build();
+				.bucket(bucketName)
+				.key(key)
+				.contentType(multipartFile.getContentType())
+				.acl(ObjectCannedACL.PUBLIC_READ) // 업로드 즉시 공개 읽기 권한 부여
+				.build();
 
 		try {
 			s3Client.putObject(request, RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
@@ -79,6 +79,40 @@ public class AwsS3Service {
 
 		String url = buildPublicUrl(key);
 		log.info("[S3] 업로드 성공 - key={}, url={}", key, url);
+		return url;
+	}
+
+	/**
+	 * 바이트 배열 업로드 (기본 이미지 등 리소스를 직접 업로드할 때 사용)
+	 * - originalFilename과 contentType을 전달받아 S3에 저장하고 공개 URL을 반환합니다.
+	 */
+	public String store(byte[] bytes, String originalFilename, String contentType, Category category) {
+		if (bytes == null || bytes.length == 0) {
+			throw new IllegalArgumentException("업로드할 데이터가 비어 있습니다.");
+		}
+
+		String uniqueName = createUniqueFileName(originalFilename);
+		String key = buildObjectKey(category, uniqueName);
+
+		log.info("[S3] 업로드(바이트) 시작 - bucket={}, region={}, key={}, size={}, contentType={}",
+				bucketName, region, key, bytes.length, contentType);
+
+		PutObjectRequest request = PutObjectRequest.builder()
+				.bucket(bucketName)
+				.key(key)
+				.contentType(contentType)
+				.acl(ObjectCannedACL.PUBLIC_READ)
+				.build();
+
+		try {
+			s3Client.putObject(request, RequestBody.fromBytes(bytes));
+		} catch (Exception e) {
+			log.error("[S3] 업로드(바이트) 실패 - key={}, 원인={}", key, e.getMessage(), e);
+			throw new IllegalStateException("S3 업로드 실패: " + e.getMessage(), e);
+		}
+
+		String url = buildPublicUrl(key);
+		log.info("[S3] 업로드(바이트) 성공 - key={}, url={}", key, url);
 		return url;
 	}
 
@@ -140,16 +174,16 @@ public class AwsS3Service {
 	 * 카테고리와 파일명을 결합해 S3 오브젝트 키(prefix/filename) 생성
 	 */
 	private String buildObjectKey(Category category, String fileName) {
-        String prefix;
+		String prefix;
 		switch (category) {
 			case COMMUNITY -> prefix = communityPrefix;
 			case MARKET -> prefix = marketPrefix;
 			case AI -> {
 				prefix = aiPrefix;
 			}
-            case PROFILE -> {
-                prefix = profilePrefix;
-            }
+			case PROFILE -> {
+				prefix = profilePrefix;
+			}
 			default -> {
 				prefix = aiPrefix;
 			}

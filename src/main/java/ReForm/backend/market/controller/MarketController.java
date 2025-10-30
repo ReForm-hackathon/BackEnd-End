@@ -40,26 +40,26 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             log.info("[/market/item] 요청 수신 - userId={}, title={}", userId, request.getTitle());
 
             // 사용자 조회
             User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
             // Market 엔티티 생성
             Market market = Market.builder()
-                .user(user)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .tag(request.getTag())
-                .image(request.getImage())
-                .price(request.getPrice())
-                .isDonation(request.getIsDonation())
-                .createdAt(LocalDateTime.now())
-                .build();
+                    .user(user)
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .tag(request.getTag())
+                    .image(request.getImage())
+                    .price(request.getPrice())
+                    .isDonation(request.getIsDonation())
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
             // DB 저장
             Market savedMarket = marketRepository.save(market);
@@ -80,11 +80,11 @@ public class MarketController {
         } catch (IllegalArgumentException e) {
             log.error("[/market/item] 잘못된 요청 - {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item] 서버 에러", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -101,20 +101,20 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             var comment = marketCommentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
             if (comment.getMarket() == null || !comment.getMarket().getMarketId().equals(marketId)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "해당 마켓의 댓글이 아닙니다."));
+                        .body(Map.of("error", "해당 마켓의 댓글이 아닙니다."));
             }
 
             if (!comment.getUser().getUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "본인의 댓글만 삭제할 수 있습니다."));
+                        .body(Map.of("error", "본인의 댓글만 삭제할 수 있습니다."));
             }
 
             marketCommentRepository.deleteById(commentId);
@@ -127,11 +127,11 @@ public class MarketController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item/{}/delete-comment/{}] 에러", marketId, commentId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -149,30 +149,30 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             var comment = marketCommentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
             if (comment.getMarket() == null || !comment.getMarket().getMarketId().equals(marketId)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "해당 마켓의 댓글이 아닙니다."));
+                        .body(Map.of("error", "해당 마켓의 댓글이 아닙니다."));
             }
 
             if (!comment.getUser().getUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "본인의 댓글만 수정할 수 있습니다."));
+                        .body(Map.of("error", "본인의 댓글만 수정할 수 있습니다."));
             }
 
             // 엔티티 재생성 없이 필드만 변경하려면 엔티티에 setter가 없으므로 빌더 재구성
             var updated = ReForm.backend.market.MarketComment.builder()
-                .commentId(comment.getCommentId())
-                .market(comment.getMarket())
-                .user(comment.getUser())
-                .content(request.getContent())
-                .createdAt(comment.getCreatedAt())
-                .build();
+                    .commentId(comment.getCommentId())
+                    .market(comment.getMarket())
+                    .user(comment.getUser())
+                    .content(request.getContent())
+                    .createdAt(comment.getCreatedAt())
+                    .build();
 
             var saved = marketCommentRepository.save(updated);
 
@@ -185,11 +185,11 @@ public class MarketController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item/{}/comment/{}] 에러", marketId, commentId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -206,21 +206,21 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             Market market = marketRepository.findById(marketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
 
             User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
             ReForm.backend.market.MarketComment comment = ReForm.backend.market.MarketComment.builder()
-                .market(market)
-                .user(user)
-                .content(request.getContent())
-                .createdAt(java.time.LocalDateTime.now())
-                .build();
+                    .market(market)
+                    .user(user)
+                    .content(request.getContent())
+                    .createdAt(java.time.LocalDateTime.now())
+                    .build();
 
             ReForm.backend.market.MarketComment saved = marketCommentRepository.save(comment);
 
@@ -235,11 +235,11 @@ public class MarketController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item/{}/comment] 에러", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -260,7 +260,7 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             // 좋아요 존재 여부 확인
@@ -268,7 +268,7 @@ public class MarketController {
             var likeOpt = marketLikeRepository.findById(id);
             if (likeOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "좋아요가 존재하지 않습니다."));
+                        .body(Map.of("error", "좋아요가 존재하지 않습니다."));
             }
 
             marketLikeRepository.deleteById(id);
@@ -282,7 +282,7 @@ public class MarketController {
         } catch (Exception e) {
             log.error("[/market/item/{}/delete-like] 에러", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -297,29 +297,29 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             Market market = marketRepository.findById(marketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
 
             User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
             ReForm.backend.market.MarketLike.MarketLikeId id = new ReForm.backend.market.MarketLike.MarketLikeId(marketId, userId);
 
             // 이미 좋아요 했는지 확인
             if (marketLikeRepository.findById(id).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "이미 좋아요를 눌렀습니다."));
+                        .body(Map.of("error", "이미 좋아요를 눌렀습니다."));
             }
 
             ReForm.backend.market.MarketLike like = ReForm.backend.market.MarketLike.builder()
-                .id(id)
-                .market(market)
-                .user(user)
-                .likedAt(java.time.LocalDateTime.now())
-                .build();
+                    .id(id)
+                    .market(market)
+                    .user(user)
+                    .likedAt(java.time.LocalDateTime.now())
+                    .build();
 
             marketLikeRepository.save(like);
 
@@ -331,11 +331,11 @@ public class MarketController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item/{}/like] 에러", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -351,11 +351,11 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             Market market = marketRepository.findById(marketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
 
             Map<String, Object> body = new HashMap<>();
             body.put("marketId", market.getMarketId());
@@ -371,16 +371,16 @@ public class MarketController {
             return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/{}] 상세 조회 실패", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
     /**
-     * 마켓 목록 조회 (제목, 작성자만)
+     * 마켓 목록 조회 (모든 컬럼 반환)
      * - 경로: GET /market
      * - 헤더: Authorization: Bearer {access_token}
      */
@@ -391,20 +391,27 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             List<Market> markets = marketRepository.findAllByOrderByCreatedAtDesc();
 
             List<Map<String, Object>> items = markets.stream()
-                .map(m -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("marketId", m.getMarketId());
-                    item.put("title", m.getTitle());
-                    item.put("author", m.getUser() != null ? m.getUser().getUserName() : "");
-                    return item;
-                })
-                .toList();
+                    .map(m -> {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("marketId", m.getMarketId());
+                        item.put("userId", m.getUser() != null ? m.getUser().getUserId() : null);
+                        item.put("author", m.getUser() != null ? m.getUser().getUserName() : null);
+                        item.put("title", m.getTitle());
+                        item.put("content", m.getContent());
+                        item.put("tag", m.getTag());
+                        item.put("image", m.getImage());
+                        item.put("price", m.getPrice());
+                        item.put("isDonation", m.getIsDonation());
+                        item.put("createdAt", m.getCreatedAt());
+                        return item;
+                    })
+                    .toList();
 
             Map<String, Object> response = new HashMap<>();
             response.put("items", items);
@@ -413,7 +420,7 @@ public class MarketController {
         } catch (Exception e) {
             log.error("[/market] 목록 조회 실패", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -429,22 +436,22 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             String query = keyword == null ? "" : keyword;
             List<Market> markets = marketRepository.findByTitleContainingOrderByCreatedAtDesc(query);
 
             List<Map<String, Object>> items = markets.stream()
-                .map(m -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("marketId", m.getMarketId());
-                    item.put("title", m.getTitle());
-                    item.put("author", m.getUser() != null ? m.getUser().getUserName() : "");
-                    item.put("createdAt", m.getCreatedAt());
-                    return item;
-                })
-                .toList();
+                    .map(m -> {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("marketId", m.getMarketId());
+                        item.put("title", m.getTitle());
+                        item.put("author", m.getUser() != null ? m.getUser().getUserName() : "");
+                        item.put("createdAt", m.getCreatedAt());
+                        return item;
+                    })
+                    .toList();
 
             Map<String, Object> response = new HashMap<>();
             response.put("items", items);
@@ -453,7 +460,7 @@ public class MarketController {
         } catch (Exception e) {
             log.error("[/market/search/{}] 검색 실패", keyword, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -471,33 +478,33 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             log.info("[/market/item/{}] 수정 요청 수신 - userId={}", marketId, userId);
 
             // 기존 마켓 아이템 조회
             Market existingMarket = marketRepository.findById(marketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
 
             // 작성자 확인 (본인만 수정 가능)
             if (!existingMarket.getUser().getUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "본인의 제품만 수정할 수 있습니다."));
+                        .body(Map.of("error", "본인의 제품만 수정할 수 있습니다."));
             }
 
             // 제품 정보 업데이트
             Market updatedMarket = Market.builder()
-                .marketId(existingMarket.getMarketId())
-                .user(existingMarket.getUser())
-                .title(request.getTitle())
-                .content(request.getContent())
-                .tag(request.getTag())
-                .image(request.getImage())
-                .price(request.getPrice())
-                .isDonation(request.getIsDonation())
-                .createdAt(existingMarket.getCreatedAt()) // 생성일은 유지
-                .build();
+                    .marketId(existingMarket.getMarketId())
+                    .user(existingMarket.getUser())
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .tag(request.getTag())
+                    .image(request.getImage())
+                    .price(request.getPrice())
+                    .isDonation(request.getIsDonation())
+                    .createdAt(existingMarket.getCreatedAt()) // 생성일은 유지
+                    .build();
 
             // DB 저장
             Market savedMarket = marketRepository.save(updatedMarket);
@@ -520,11 +527,11 @@ public class MarketController {
         } catch (IllegalArgumentException e) {
             log.error("[/market/item/{}] 잘못된 요청 - {}", marketId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/item/{}] 서버 에러", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -540,19 +547,19 @@ public class MarketController {
             String userId = getCurrentUserId();
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "인증이 필요합니다."));
+                        .body(Map.of("error", "인증이 필요합니다."));
             }
 
             log.info("[/market/delete-item/{}] 삭제 요청 수신 - userId={}", marketId, userId);
 
             // 기존 마켓 아이템 조회
             Market existingMarket = marketRepository.findById(marketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 제품을 찾을 수 없습니다."));
 
             // 작성자 확인 (본인만 삭제 가능)
             if (!existingMarket.getUser().getUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "본인의 제품만 삭제할 수 있습니다."));
+                        .body(Map.of("error", "본인의 제품만 삭제할 수 있습니다."));
             }
 
             // 제품 삭제
@@ -570,11 +577,11 @@ public class MarketController {
         } catch (IllegalArgumentException e) {
             log.error("[/market/delete-item/{}] 잘못된 요청 - {}", marketId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("[/market/delete-item/{}] 서버 에러", marketId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "서버 에러가 발생했습니다."));
+                    .body(Map.of("error", "서버 에러가 발생했습니다."));
         }
     }
 
@@ -584,16 +591,16 @@ public class MarketController {
     private String getCurrentUserId() {
         try {
             String email = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication() != null ?
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : null;
-            
+                    .getAuthentication() != null ?
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName() : null;
+
             if (email == null) {
                 return null;
             }
-            
+
             return userRepository.findByEmail(email)
-                .map(User::getUserId)
-                .orElse(null);
+                    .map(User::getUserId)
+                    .orElse(null);
         } catch (Exception e) {
             log.error("사용자 ID 추출 실패", e);
             return null;
@@ -606,7 +613,7 @@ public class MarketController {
     public static class MarketItemRequestDTO {
         private String title;
         private String content;
-            private String tag;
+        private String tag;
         private String image;
         private Integer price;
         private Boolean isDonation;
@@ -614,18 +621,18 @@ public class MarketController {
         // Getters and Setters
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
-        
+
         public String getContent() { return content; }
         public void setContent(String content) { this.content = content; }
-            public String getTag() { return tag; }
-            public void setTag(String tag) { this.tag = tag; }
-        
+        public String getTag() { return tag; }
+        public void setTag(String tag) { this.tag = tag; }
+
         public String getImage() { return image; }
         public void setImage(String image) { this.image = image; }
-        
+
         public Integer getPrice() { return price; }
         public void setPrice(Integer price) { this.price = price; }
-        
+
         public Boolean getIsDonation() { return isDonation; }
         public void setIsDonation(Boolean isDonation) { this.isDonation = isDonation; }
     }

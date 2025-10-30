@@ -37,5 +37,5 @@ out/
 .vscode/
 
 # application 설정 파일 제외
-/src/main/resources/application-local.yml
+/src/main/resources/application-aws.yml
 /src/main/resources/application-prod.yml
