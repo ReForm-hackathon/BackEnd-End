@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 
 import java.time.LocalDateTime;
 
@@ -66,7 +65,14 @@ public class User {
     private String profileImageUrl;
 
     @Column(name = "status")
-    private boolean status;
+    private Boolean status;
+
+    @PrePersist
+    private void prePersist() {
+        if (this.status == null) {
+            this.status = Boolean.FALSE;
+        }
+    }
 
     public void authorizeUser() { // 사용자 역할을 USER로 할당
         this.role = Role.USER;

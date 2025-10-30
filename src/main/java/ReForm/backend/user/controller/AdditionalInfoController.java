@@ -44,7 +44,7 @@ public class AdditionalInfoController {
             body.put("nickname", u.getNickname());
             body.put("address", u.getAddress());
             body.put("profileImageUrl", u.getProfileImageUrl());
-            body.put("status", u.isStatus()); // status 추가
+            body.put("status", Boolean.TRUE.equals(u.getStatus())); // status 추가
         }
         return ResponseEntity.ok(body);
     }
@@ -110,7 +110,7 @@ public class AdditionalInfoController {
         updated = userRepository.save(updated);
 
         log.info("[ADDITIONAL] DB 저장 완료 - userId={}, nickname='{}', address='{}', profileImageUrl={}, status={}",
-                updated.getUserId(), updated.getNickname(), updated.getAddress(), updated.getProfileImageUrl(), updated.isStatus());
+                updated.getUserId(), updated.getNickname(), updated.getAddress(), updated.getProfileImageUrl(), Boolean.TRUE.equals(updated.getStatus()));
 
         if (!status) {
             String missing = String.join(", ", result.getMissingFields());
