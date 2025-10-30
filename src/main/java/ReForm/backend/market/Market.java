@@ -33,6 +33,9 @@ public class Market {
 	@Column(name = "content")
 	private String content;
 
+	@Column(name = "tag")
+	private String tag;
+
 	@Column(name = "image")
 	private String image;
 

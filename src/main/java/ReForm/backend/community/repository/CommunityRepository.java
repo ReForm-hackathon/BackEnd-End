@@ -20,4 +20,9 @@ public interface CommunityRepository extends JpaRepository<Community, Integer> {
      * @return 해당 사용자의 커뮤니티 게시글 목록
      */
     List<Community> findByUser_UserIdOrderByCreatedAtDesc(String userId);
+
+    /**
+     * 제목 부분일치 검색 (최신순)
+     */
+    List<Community> findByTitleContainingOrderByCreatedAtDesc(String title);
 }
